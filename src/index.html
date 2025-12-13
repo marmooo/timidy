@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head prefix="og: http://ogp.me/ns#">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A Timidity++ style MIDI player powered by Midy.">
+    <title>Timidy</title>
+    <meta property="og:title" content="Timidy">
+    <meta property="og:site_name" content="Timidy">
+    <meta property="og:description" content="A Timidity++ style MIDI player powered by Midy.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://marmooo.github.io/timidy/">
+    <meta property="og:image" content="https://marmooo.github.io/timidy/favicon/apple-touch-icon.png">
+    <meta name="twitter:card" content="summary">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-F2179JXDYY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-F2179JXDYY');
+    </script>
+    <link class="drop-inline-css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <style>
+      html[data-bs-theme="dark"] .favicon { filter: invert(1) hue-rotate(180deg); }
+      html[data-bs-theme="dark"] .btn-light {
+        --bs-btn-color: #fff;
+        --bs-btn-bg: var(--bs-gray-800);
+        --bs-btn-border-color: var(--bs-gray-800);
+        --bs-btn-hover-color: #fff;
+        --bs-btn-hover-bg: var(--bs-gray-700);
+        --bs-btn-hover-border-color: var(--bs-gray-600);
+        --bs-btn-active-color: #fff;
+        --bs-btn-active-bg: var(--bs-gray-600);
+        --bs-btn-active-border-color: var(--bs-gray-500);
+      }
+      @font-face {
+        font-family: "MIDIPlayerIcons";
+        src: url("https://marmooo.github.io/midi-player/midi-player-icons.woff2") format("woff2");
+      }
+      .midi-player-btn {
+        font-family: MIDIPlayerIcons;
+        font-size: 24px;
+        line-height: 1;
+      }
+      #midi-player { height:34px; }
+      .vrange-container {
+        display: inline-block;
+        width: 20px;
+        height: 120px;
+        position: relative;
+      }
+      input.vrange {
+        width: 120px;
+        height: 20px;
+        -webkit-appearance: none;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin: 0;
+        transform: translate(-50%, -50%) rotate(-90deg);
+      }
+    </style>
+    <script data-ad-client="ca-pub-6459713332128733" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  </head>
+  <body>
+    <header>
+      <nav class="navbar navbar-expand">
+        <div class="container flex-wrap">
+          <a class="navbar-brand" href="/timidy/">
+            <img class="favicon" alt="" src="/timidy/favicon/favicon.svg" width="32" height="32">
+            Timidy
+          </a>
+          <div class="navbar-nav">
+            <button title="toggle dark-mode" id="toggleDarkMode" class="fs-4 btn p-0" type="button">🌓</button>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <main class="container table-responsive">
+      <p>A Timidity++ style MIDI player powered by <a href="https://github.com/marmooo/midy">Midy</a>.</p>
+      <div class="text-center">
+        <div>
+          <button id="selectFile" class="btn btn-lg btn-primary rounded-pill">Select MIDI / SoundFont</button>
+          <input id="inputFile" type="file" accept=".mid,.midi,.sf2,.sf3" hidden="">
+        </div>
+        or drop a file.
+      </div>
+      <div id="midi-player"></div>
+      <table id="midi-visualizer" class="table table-sm table-striped">
+        <tbody>
+          <tr class="align-middle">
+            <th title="Channel">Ch.</th>
+            <th title="Volume">Vol.</th>
+            <th title="Expression">Exp.</th>
+            <th>Pan</th>
+            <th>Program</th>
+            <th>Instrument</th>
+            <th></th>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">1</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">2</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">3</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">4</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">5</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">6</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">7</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">8</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end"d>9</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">10</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">11</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">12</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">13</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">14</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">15</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+          <tr class="align-middle">
+            <td class="text-end">16</td>
+            <td><input type="range" class="form-range" value="100" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="128" min="0" max="127"></td>
+            <td><input type="range" class="form-range" value="64" min="0" max="127"></td>
+            <td><input type="number" class="form-control form-control-sm text-center" value="0" min="0" max="127"></td>
+            <td><midi-instrument></midi-instrument></td>
+            <td><midi-piano></midi-piano></td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
+    <footer class="pt-4 alert text-center">
+      <div>
+        <a class="px-1" href="/">Home</a>
+        <a class="px-1" href="/terms/">Terms</a>
+        <a class="px-1" href="https://github.com/marmooo/timidy">Contact</a>
+      </div>
+      <div class="text-muted">&copy; <a href="https://github.com/marmooo">marmooo</a></div>
+    </footer>
+    <template id="midi-instrument">
+      <select class="form-select form-select-sm w-auto">
+        <option>Acoustic Piano</option>
+        <option>Bright Piano</option>
+        <option>Electric Grand Piano</option>
+        <option>Honky-tonk Piano</option>
+        <option>Electric Piano</option>
+        <option>Electric Piano 2</option>
+        <option>Harpsichord</option>
+        <option>Clavi</option>
+        <option>Celesta</option>
+        <option>Glockenspiel</option>
+        <option>Music box</option>
+        <option>Vibraphone</option>
+        <option>Marimba</option>
+        <option>Xylophone</option>
+        <option>Tubular Bell</option>
+        <option>Dulcimer</option>
+        <option>Drawbar Organ</option>
+        <option>Percussive Organ</option>
+        <option>Rock Organ</option>
+        <option>Church organ</option>
+        <option>Reed organ</option>
+        <option>Accordion</option>
+        <option>Harmonica</option>
+        <option>Tango Accordion</option>
+        <option>Acoustic Guitar (nylon)</option>
+        <option>Acoustic Guitar (steel)</option>
+        <option>Electric Guitar (jazz)</option>
+        <option>Electric Guitar (clean)</option>
+        <option>Electric Guitar (muted)</option>
+        <option>Overdriven Guitar</option>
+        <option>Distortion Guitar</option>
+        <option>Guitar harmonics</option>
+        <option>Acoustic Bass</option>
+        <option>Electric Bass (finger)</option>
+        <option>Electric Bass (pick)</option>
+        <option>Fretless Bass</option>
+        <option>Slap Bass 1</option>
+        <option>Slap Bass 2</option>
+        <option>Synth Bass 1</option>
+        <option>Synth Bass 2</option>
+        <option>Violin</option>
+        <option>Viola</option>
+        <option>Cello</option>
+        <option>Double bass</option>
+        <option>Tremolo Strings</option>
+        <option>Pizzicato Strings</option>
+        <option>Orchestral Harp</option>
+        <option>Timpani</option>
+        <option>String Ensemble 1</option>
+        <option>String Ensemble 2</option>
+        <option>Synth Strings 1</option>
+        <option>Synth Strings 2</option>
+        <option>Voice Aahs</option>
+        <option>Voice Oohs</option>
+        <option>Synth Voice</option>
+        <option>Orchestra Hit</option>
+        <option>Trumpet</option>
+        <option>Trombone</option>
+        <option>Tuba</option>
+        <option>Muted Trumpet</option>
+        <option>French horn</option>
+        <option>Brass Section</option>
+        <option>Synth Brass 1</option>
+        <option>Synth Brass 2</option>
+        <option>Soprano Sax</option>
+        <option>Alto Sax</option>
+        <option>Tenor Sax</option>
+        <option>Baritone Sax</option>
+        <option>Oboe</option>
+        <option>English Horn</option>
+        <option>Bassoon</option>
+        <option>Clarinet</option>
+        <option>Piccolo</option>
+        <option>Flute</option>
+        <option>Recorder</option>
+        <option>Pan Flute</option>
+        <option>Blown Bottle</option>
+        <option>Shakuhachi</option>
+        <option>Whistle</option>
+        <option>Ocarina</option>
+        <option>Lead 1 (square)</option>
+        <option>Lead 2 (sawtooth)</option>
+        <option>Lead 3 (calliope)</option>
+        <option>Lead 4 (chiff)</option>
+        <option>Lead 5 (charang)</option>
+        <option>Lead 6 (voice)</option>
+        <option>Lead 7 (fifths)</option>
+        <option>Lead 8 (bass + lead)</option>
+        <option>Pad 1 (Fantasia)</option>
+        <option>Pad 2 (warm)</option>
+        <option>Pad 3 (polysynth)</option>
+        <option>Pad 4 (choir)</option>
+        <option>Pad 5 (bowed)</option>
+        <option>Pad 6 (metallic)</option>
+        <option>Pad 7 (halo)</option>
+        <option>Pad 8 (sweep)</option>
+        <option>FX 1 (rain)</option>
+        <option>FX 2 (soundtrack)</option>
+        <option>FX 3 (crystal)</option>
+        <option>FX 4 (atmosphere)</option>
+        <option>FX 5 (brightness)</option>
+        <option>FX 6 (goblins)</option>
+        <option>FX 7 (echoes)</option>
+        <option>FX 8 (sci-fi)</option>
+        <option>Sitar</option>
+        <option>Banjo</option>
+        <option>Shamisen</option>
+        <option>Koto</option>
+        <option>Kalimba</option>
+        <option>Bagpipe</option>
+        <option>Fiddle</option>
+        <option>Shanai</option>
+        <option>Tinkle Bell</option>
+        <option>Agogo</option>
+        <option>Steel Drums</option>
+        <option>Woodblock</option>
+        <option>Taiko Drum</option>
+        <option>Melodic Tom</option>
+        <option>Synth Drum</option>
+        <option>Reverse Cymbal</option>
+        <option>Guitar Fret Noise</option>
+        <option>Breath Noise</option>
+        <option>Seashore</option>
+        <option>Bird Tweet</option>
+        <option>Telephone Ring</option>
+        <option>Helicopter</option>
+        <option>Applause</option>
+        <option>Gunshot</option>
+      </select>
+    </template>
+    <template id="midi-piano">
+      <style>
+        .wrapper { width:100%; height:32px; }
+        svg { width:100%; height:100%; display:block; user-select:none; touch-action:none; }
+        .white { fill:#fff; stroke:#888; stroke-width:0.05; }
+        .black { fill:#000; }
+      </style>
+      <div class="wrapper"></div>
+    </template>
+    <div class="drop-inline-css d-none form-select form-select-sm p-1"></div>
+    <script type="module" src="./index.js"></script>
+  </body>
+</html>
