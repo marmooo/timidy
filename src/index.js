@@ -60,6 +60,7 @@ async function noteOn(channelNumber, event, pressed) {
   if (pressed[noteNumber]) return;
   pressed[noteNumber] = true;
   const velocity = Math.ceil(event.pressure * 127) || 64;
+  setKeyColor(event.target, velocity);
   await midy.noteOn(channelNumber, noteNumber, velocity);
 }
 
@@ -67,6 +68,7 @@ function noteOff(channelNumber, event, pressed) {
   const noteNumber = Number(event.target.dataset.index);
   pressed[noteNumber] = false;
   const velocity = Math.ceil(event.pressure * 127) || 64;
+  event.target.style.removeProperty("fill");
   midy.noteOff(channelNumber, noteNumber, velocity);
 }
 
@@ -105,6 +107,12 @@ function setPianoEvents(pianoComponent, channelNumber) {
   });
 }
 
+function setKeyColor(key, velocity) {
+  const lightness = 30 + velocity / 127 * 40;
+  const color = `hsl(200, 80%, ${lightness}%)`;
+  key.style.setProperty("fill", color);
+}
+
 function visualizerLoop() {
   if (!midiPlayer.isPlaying) {
     clearAllKeys(pianos);
@@ -117,10 +125,8 @@ function visualizerLoop() {
     if (currentTime < event.startTime + startDelay) break;
     switch (event.type) {
       case "noteOn": {
-        const lightness = 30 + event.velocity / 127 * 40;
-        const color = `hsl(200, 80%, ${lightness}%)`;
         const key = pianos[event.channel][event.noteNumber];
-        key.style.setProperty("fill", color);
+        setKeyColor(key, event.velocity);
         break;
       }
       case "noteOff":
