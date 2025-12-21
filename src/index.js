@@ -56,19 +56,23 @@ function clearAllKeys(pianos) {
 }
 
 async function noteOn(channelNumber, event, pressed) {
-  const noteNumber = Number(event.target.dataset.index);
+  const target = event.target;
+  const noteNumber = Number(target.dataset.index);
   if (pressed[noteNumber]) return;
   pressed[noteNumber] = true;
   const velocity = Math.ceil(event.pressure * 127) || 64;
-  setKeyColor(event.target, velocity);
+  setKeyColor(target, velocity);
+  target.setAttribute("aria-pressed", "true");
   await midy.noteOn(channelNumber, noteNumber, velocity);
 }
 
 function noteOff(channelNumber, event, pressed) {
+  const target = event.target;
   const noteNumber = Number(event.target.dataset.index);
   pressed[noteNumber] = false;
   const velocity = Math.ceil(event.pressure * 127) || 64;
-  event.target.style.removeProperty("fill");
+  target.style.removeProperty("fill");
+  target.setAttribute("aria-pressed", "false");
   midy.noteOff(channelNumber, noteNumber, velocity);
 }
 
@@ -260,12 +264,14 @@ class MidiPiano extends HTMLElement {
       const note = i % 12;
       if (whitePattern.includes(note)) {
         const rect = document.createElementNS(svgNS, "rect");
+        rect.role = "button";
         rect.setAttribute("x", xPos);
         rect.setAttribute("y", 0);
         rect.setAttribute("width", whiteWidth);
         rect.setAttribute("height", whiteHeight);
         rect.setAttribute("class", "white");
         rect.setAttribute("data-index", i);
+        rect.setAttribute("aria-pressed", "false");
         svg.appendChild(rect);
         whiteXMap[i] = xPos;
         xPos += whiteWidth;
