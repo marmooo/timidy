@@ -105,9 +105,10 @@ function setPianoEvents(pianoComponent, channelNumber) {
   });
   pianoComponent.addEventListener("pointerleave", async () => {
     if (midiPlayer.isPlaying) return;
-    midy.stopNotes(0, true, midy.audioContext.currentTime);
+    const audioContext = midy.audioContext;
+    midy.stopNotes(0, true, audioContext.currentTime);
     pressed.fill(false);
-    await midy.audioContext.suspend();
+    if (audioContext.state === "running") await audioContext.suspend();
   });
 }
 
@@ -326,8 +327,9 @@ async function loadFile(file) {
 const globalCSS = getGlobalCSS();
 initMIDIInstrumentElement();
 
-const midy = new Midy(new AudioContext());
-await midy.audioContext.suspend();
+const audioContext = new AudioContext();
+if (audioContext.state === "running") await audioContext.suspend();
+const midy = new Midy(audioContext);
 const midiPlayer = new MIDIPlayer(midy);
 await midy.loadSoundFont(`${midiPlayer.soundFontURL}/000.sf3`);
 midiPlayer.defaultLayout();
