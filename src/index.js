@@ -55,60 +55,77 @@ function clearAllKeys(pianos) {
   }
 }
 
-async function noteOn(channelNumber, event, pressed) {
-  const target = event.target;
+async function noteOn(channelNumber, target, pressure, pressed) {
   const noteNumber = Number(target.dataset.index);
   if (pressed[noteNumber]) return;
   pressed[noteNumber] = true;
-  const velocity = Math.ceil(event.pressure * 127) || 64;
+  const velocity = Math.ceil(pressure * 127) || 64;
   setKeyColor(target, velocity);
   target.setAttribute("aria-pressed", "true");
   await midy.noteOn(channelNumber, noteNumber, velocity);
 }
 
-function noteOff(channelNumber, event, pressed) {
-  const target = event.target;
-  const noteNumber = Number(event.target.dataset.index);
+function noteOff(channelNumber, target, pressure, pressed) {
+  const noteNumber = Number(target.dataset.index);
   pressed[noteNumber] = false;
-  const velocity = Math.ceil(event.pressure * 127) || 64;
+  const velocity = Math.ceil(pressure * 127) || 64;
   target.style.removeProperty("fill");
   target.setAttribute("aria-pressed", "false");
   midy.noteOff(channelNumber, noteNumber, velocity);
 }
 
-function setPianoEvents(pianoComponent, channelNumber) {
-  const pressed = new Array(128);
-  const keys = pianoComponent.shadowRoot.querySelectorAll("rect");
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    key.addEventListener("pointerenter", async (event) => {
-      if (!event.buttons) return;
-      await noteOn(channelNumber, event, pressed);
-    });
-    key.addEventListener("pointerleave", (event) => {
-      noteOff(channelNumber, event, pressed);
-    });
-    key.addEventListener("pointerdown", async (event) => {
-      await noteOn(channelNumber, event, pressed);
-    });
-    key.addEventListener("pointerup", (event) => {
-      noteOff(channelNumber, event, pressed);
-    });
-    key.addEventListener("pointercancel", (event) => {
-      noteOff(channelNumber, event, pressed);
-    });
+function handleMove(channelNumber, root, event, pressed) {
+  const elements = root.elementsFromPoint(event.clientX, event.clientY);
+  let key;
+  for (let i = 0; i < elements.length; i++) {
+    const element = elements[i];
+    if (element instanceof SVGRectElement) {
+      key = element;
+      break;
+    }
   }
-  pianoComponent.addEventListener("pointerenter", async () => {
+  if (key === currentKey) return;
+  if (currentKey) {
+    noteOff(channelNumber, currentKey, event.pressure, pressed);
+  }
+  if (key) {
+    noteOn(channelNumber, key, event.pressure, pressed);
+  }
+  currentKey = key;
+}
+
+async function release(channelNumber, pressure, pressed) {
+  if (!currentKey) return;
+  await noteOff(channelNumber, currentKey, pressure, pressed);
+  currentKey = null;
+  const audioContext = midy.audioContext;
+  if (!midiPlayer.isPlaying && audioContext.state === "running") {
+    audioContext.suspend();
+  }
+}
+
+function setPianoEvents(pianoComponent, channelNumber) {
+  const pressed = new Array(128).fill(false);
+  const root = pianoComponent.shadowRoot;
+  pianoComponent.addEventListener("pointerdown", async (event) => {
+    pianoComponent.setPointerCapture(event.pointerId);
     if (midy.audioContext.state === "suspended") {
       await midy.audioContext.resume();
     }
+    handleMove(channelNumber, root, event, pressed);
   });
-  pianoComponent.addEventListener("pointerleave", async () => {
-    if (midiPlayer.isPlaying) return;
-    const audioContext = midy.audioContext;
-    midy.stopNotes(0, true, audioContext.currentTime);
-    pressed.fill(false);
-    if (audioContext.state === "running") await audioContext.suspend();
+  pianoComponent.addEventListener("pointermove", (event) => {
+    if (!event.buttons) return;
+    handleMove(channelNumber, root, event, pressed);
+  });
+  pianoComponent.addEventListener("pointerup", async (event) => {
+    await release(channelNumber, event.pressure, pressed);
+  });
+  pianoComponent.addEventListener("pointercancel", async (event) => {
+    await release(channelNumber, event.pressure, pressed);
+  });
+  pianoComponent.addEventListener("pointerleave", async (event) => {
+    await release(channelNumber, event.pressure, pressed);
   });
 }
 
@@ -340,8 +357,9 @@ const volumes = [];
 const pans = [];
 const expressions = [];
 const programs = [];
-
 let scheduleIndex = 0;
+let currentKey;
+
 midiPlayer.playNode.addEventListener("click", () => {
   midiPlayer.isPlaying = true;
   scheduleIndex = 0;
