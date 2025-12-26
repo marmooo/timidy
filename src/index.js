@@ -94,38 +94,56 @@ function handleMove(channelNumber, root, event, pressed) {
   currentKey = key;
 }
 
-async function release(channelNumber, pressure, pressed) {
+function release(channelNumber, pressure, pressed) {
   if (!currentKey) return;
-  await noteOff(channelNumber, currentKey, pressure, pressed);
+  noteOff(channelNumber, currentKey, pressure, pressed);
   currentKey = null;
+}
+
+async function releaseAll() {
   const audioContext = midy.audioContext;
   if (!midiPlayer.isPlaying && audioContext.state === "running") {
-    audioContext.suspend();
+    const now = midy.audioContext.currentTime;
+    await midy.stopNotes(0, true, now);
+    await audioContext.suspend();
   }
 }
 
 function setPianoEvents(pianoComponent, channelNumber) {
   const pressed = new Array(128).fill(false);
   const root = pianoComponent.shadowRoot;
-  pianoComponent.addEventListener("pointerdown", async (event) => {
-    pianoComponent.setPointerCapture(event.pointerId);
+  pianoComponent.addEventListener("pointerdown", (event) => {
     if (midy.audioContext.state === "suspended") {
-      await midy.audioContext.resume();
+      midy.audioContext.resume();
     }
+    pianoComponent.setPointerCapture(event.pointerId);
     handleMove(channelNumber, root, event, pressed);
   });
   pianoComponent.addEventListener("pointermove", (event) => {
     if (!event.buttons) return;
+    if (midy.audioContext.state === "suspended") {
+      midy.audioContext.resume();
+    }
     handleMove(channelNumber, root, event, pressed);
   });
-  pianoComponent.addEventListener("pointerup", async (event) => {
-    await release(channelNumber, event.pressure, pressed);
+  pianoComponent.addEventListener("pointerup", (event) => {
+    release(channelNumber, event.pressure, pressed);
+  });
+  pianoComponent.addEventListener("pointerenter", (event) => {
+    globalThis.getSelection()?.removeAllRanges();
+    if (!event.buttons) return;
+    if (midy.audioContext.state === "suspended") {
+      midy.audioContext.resume();
+    }
+    handleMove(channelNumber, root, event, pressed);
   });
   pianoComponent.addEventListener("pointercancel", async (event) => {
-    await release(channelNumber, event.pressure, pressed);
+    release(channelNumber, event.pressure, pressed);
+    await releaseAll();
   });
   pianoComponent.addEventListener("pointerleave", async (event) => {
-    await release(channelNumber, event.pressure, pressed);
+    release(channelNumber, event.pressure, pressed);
+    await releaseAll();
   });
 }
 
