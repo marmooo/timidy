@@ -154,7 +154,7 @@ function setKeyColor(key, velocity) {
 }
 
 function visualizerLoop() {
-  if (!midiPlayer.isPlaying) {
+  if (!midiPlayer.isPlaying || midy.isPausing) {
     clearAllKeys(pianos);
     return;
   }
@@ -378,17 +378,22 @@ const programs = [];
 let scheduleIndex = 0;
 let currentKey;
 
-midiPlayer.playNode.addEventListener("click", () => {
+midy.addEventListener("looped", () => {
+  clearAllKeys(pianos);
+  scheduleIndex = 0;
+  requestAnimationFrame(visualizerLoop);
+});
+midy.addEventListener("started", () => {
   midiPlayer.isPlaying = true;
   scheduleIndex = 0;
   requestAnimationFrame(visualizerLoop);
 });
-midiPlayer.resumeNode.addEventListener("click", () => {
+midy.addEventListener("resumed", () => {
+  const time = event.target.value * midy.totalTime;
+  scheduleIndex = midy.getQueueIndex(time);
   requestAnimationFrame(visualizerLoop);
 });
-midiPlayer.pauseNode.addEventListener("click", () => {
-});
-midiPlayer.seekBarNode.addEventListener("change", () => {
+midy.addEventListener("seeked", () => {
   clearAllKeys(pianos);
   const time = event.target.value * midy.totalTime;
   scheduleIndex = midy.getQueueIndex(time);
