@@ -1,5 +1,5 @@
 import { Midy } from "https://cdn.jsdelivr.net/gh/marmooo/midy@0.4.4/dist/midy.min.js";
-import { MIDIPlayer } from "https://cdn.jsdelivr.net/npm/@marmooo/midi-player@0.0.5/+esm";
+import { MIDIPlayer } from "https://cdn.jsdelivr.net/npm/@marmooo/midi-player@0.0.6/+esm";
 
 loadConfig();
 
