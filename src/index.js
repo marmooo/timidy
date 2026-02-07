@@ -162,7 +162,8 @@ function visualizerLoop() {
   const currentTime = midy.currentTime();
   for (; scheduleIndex < timeline.length; scheduleIndex++) {
     const event = timeline[scheduleIndex];
-    if (currentTime < event.startTime + startDelay) break;
+    const t = event.startTime / midy.tempo + startDelay;
+    if (currentTime < t) break;
     switch (event.type) {
       case "noteOn": {
         const key = pianos[event.channel][event.noteNumber];
