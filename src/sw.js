@@ -1,4 +1,4 @@
-const cacheName = "2026-02-08 00:00";
+const cacheName = "2026-02-16 00:00";
 const urlsToCache = [
   "/timidy/index.js",
   "/timidy/favicon/favicon.svg",
