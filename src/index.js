@@ -1,4 +1,4 @@
-import { Midy } from "https://cdn.jsdelivr.net/gh/marmooo/midy@0.4.9/dist/midy.min.js";
+import { Midy } from "https://cdn.jsdelivr.net/gh/marmooo/midy@0.5.0/dist/midy.min.js";
 import { MIDIPlayer } from "https://cdn.jsdelivr.net/npm/@marmooo/midi-player@0.0.6/+esm";
 
 function applyTheme(midiPlayer) {
