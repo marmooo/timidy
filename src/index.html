@@ -78,16 +78,34 @@
       </nav>
     </header>
     <main class="container">
-      <noscript>
-        <div class="alert alert-warning">Please turn on JavaScript.</div>
-      </noscript>
       <p>A Timidity++ style MIDI player powered by <a href="https://github.com/marmooo/midy">Midy</a>.</p>
-      <div class="text-center">
-        <div>
-          <button id="selectFile" class="btn btn-lg btn-primary rounded-pill">Select MIDI / SoundFont</button>
-          <input id="inputFile" type="file" accept=".mid,.midi,.sf2,.sf3" hidden="">
+      <div id="selectPanel" class="card text-center mb-3">
+        <div class="card-body bg-light-subtle">
+          <div>
+            <button id="selectFile" class="btn btn-lg btn-primary rounded-pill">Select MIDI / SoundFont</button>
+            <input id="inputFile" type="file" accept=".mid,.midi,.sf2,.sf3" hidden="">
+          </div>
+          or drop a file, or select from samples.
+          <details>
+            <summary>samples</summary>
+            <form id="samples" class="text-start d-flex flex-wrap pt-1">
+              <fieldset class="card flex-fill">
+                <legend class="card-header h6">Sample MIDI</legend>
+                <div class="card-body">
+                  You can find more from <a href="https://marmooo.github.io/free-midi/">Free MIDI</a>.
+                  <div id="sampleMIDI"></div>
+                </div>
+              </fieldset>
+              <fieldset class="card flex-fill">
+                <legend class="card-header h6">Sample SoundFont</legend>
+                <div class="card-body">
+                  These soundfont's are in <a href="https://github.com/marmooo/free-soundfonts">@marmooo/free-soundfonts</a>.
+                  <div id="sampleSoundFont"></div>
+                </div>
+              </fieldset>
+            </form>
+          </details>
         </div>
-        or drop a file.
       </div>
       <div id="midi-player"></div>
       <div class="table-responsive">
@@ -399,7 +417,7 @@
       </style>
       <div class="wrapper"></div>
     </template>
-    <div class="drop-inline-css d-none form-select form-select-sm p-1"></div>
+    <div class="drop-inline-css d-none form-select form-select-sm p-1 border border-secondary"></div>
     <script type="module" src="./index.js"></script>
   </body>
 </html>

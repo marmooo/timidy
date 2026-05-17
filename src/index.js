@@ -23,6 +23,102 @@ function toggleDarkMode() {
   localStorage.setItem("darkMode", newTheme);
 }
 
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function shuffle(array) {
+  for (let i = array.length; 1 < i; i--) {
+    const k = Math.floor(Math.random() * i);
+    [array[k], array[i - 1]] = [array[i - 1], array[k]];
+  }
+  return array;
+}
+
+function setSampleEvents() {
+  document.getElementById("samples").addEventListener("change", (event) => {
+    const target = event.target;
+    switch (target.name) {
+      case "sampleMIDI": {
+        getSampleMIDI("https://midi-db.pages.dev/" + target.value);
+        break;
+      }
+      case "sampleSoundFont":
+        midiPlayer.soundFontURL = "https://soundfonts.pages.dev/" +
+          target.value;
+    }
+  });
+}
+
+async function getSampleMIDI(url) {
+  const response = await fetch(url);
+  const file = await response.blob();
+  await loadMIDI(file);
+}
+
+async function getSampleMIDIList() {
+  const root = document.getElementById("sampleMIDI");
+  const homepageResponse = await fetch(
+    "https://midi-db.pages.dev/collections.json",
+  );
+  const homepageList = await homepageResponse.json();
+  const homepage = homepageList[getRandomInt(0, homepageList.length)];
+  const { license: homepageLicense, maintainer: homepageMaintainer } = homepage;
+  const license = (homepageLicense.startsWith("http"))
+    ? `<a href="${homepageLicense}">custom</a>`
+    : homepageLicense;
+  const fileResponse = await fetch(
+    `https://midi-db.pages.dev/json/${homepage.id}/${htmlLang}.json`,
+  );
+  const fileList = await fileResponse.json();
+  const longFileList = fileList.filter((file) => !file.time.startsWith("0:"));
+  shuffle(longFileList);
+
+  let html = "";
+  for (let i = 0; i < 15; i++) {
+    const file = longFileList[i];
+    const maintainer = !homepageMaintainer
+      ? file.maintainer
+      : homepageMaintainer;
+    html += `
+<div class="form-check">
+  <label class="form-check-label">
+    <input class="form-check-input" type="radio" name="sampleMIDI" value="${file.file}">
+    ${file.title}, ${maintainer} (${license})
+  </label>
+</div>
+    `;
+    root.innerHTML = html;
+  }
+}
+
+async function getSampleSoundFontList() {
+  const root = document.getElementById("sampleSoundFont");
+  const response = await fetch("https://soundfonts.pages.dev/list.json");
+  const list = await response.json();
+  let html = "";
+  for (let i = 0; i < list.length; i++) {
+    const soundFont = list[i];
+    const checked = (soundFont.name === "GeneralUser_GS_v1.471")
+      ? "checked"
+      : "";
+    const license = (soundFont.license.startsWith("http"))
+      ? `<a href="${soundFont.license}">custom</a>`
+      : soundFont.license;
+    html += `
+<div class="form-check">
+  <label class="form-check-label">
+    <input class="form-check-input" type="radio" name="sampleSoundFont" value="${soundFont.name}" ${checked}>
+    ${soundFont.name} (${license})
+  </label>
+</div>
+    `;
+  }
+  root.innerHTML = html;
+}
+
 async function setProgramChange(channelNumber, programNumber, scheduleTime) {
   const channel = midy.channels[channelNumber];
   const bankNumber = channel.isDrum ? 128 : channel.bankLSB;
@@ -351,12 +447,42 @@ async function loadFile(file) {
   }
 }
 
+function setDragEvent() {
+  const selectPanel = document.getElementById("selectPanel");
+  let dragCounter = 0;
+  selectPanel.addEventListener("dragenter", (event) => {
+    event.preventDefault();
+    dragCounter++;
+    selectPanel.classList.add("border", "border-secondary");
+  });
+  selectPanel.addEventListener("dragleave", (event) => {
+    event.preventDefault();
+    dragCounter--;
+    if (dragCounter === 0) {
+      selectPanel.classList.remove("border", "border-secondary");
+    }
+  });
+  selectPanel.addEventListener("dragover", (event) => {
+    event.preventDefault();
+  });
+  selectPanel.addEventListener("drop", (event) => {
+    event.preventDefault();
+    selectPanel.classList.remove("border", "border-secondary");
+    const file = event.dataTransfer.files[0];
+    loadFile(file);
+  });
+}
+
+const htmlLang = document.documentElement.lang;
 const globalCSS = getGlobalCSS();
 initMIDIInstrumentElement();
+await getSampleMIDIList();
+await getSampleSoundFontList();
 
 const audioContext = new AudioContext();
 if (audioContext.state === "running") await audioContext.suspend();
 const midy = new Midy(audioContext);
+midy.cacheMode = "ads";
 const midiPlayer = new MIDIPlayer(midy);
 await midy.loadSoundFont(`${midiPlayer.soundFontURL}/000.sf3`);
 midiPlayer.defaultLayout();
@@ -391,7 +517,9 @@ midy.addEventListener("seeked", () => {
   scheduleIndex = midy.getQueueIndex(time);
 });
 
+setSampleEvents();
 setEvents();
+setDragEvent();
 
 document.getElementById("toggleDarkMode").onclick = toggleDarkMode;
 document.getElementById("selectFile").onclick = () => {
@@ -400,14 +528,6 @@ document.getElementById("selectFile").onclick = () => {
 document.getElementById("inputFile").addEventListener("change", (event) => {
   loadFile(event.target.files[0]);
 });
-globalThis.ondragover = (event) => {
-  event.preventDefault();
-};
-globalThis.ondrop = (event) => {
-  event.preventDefault();
-  const file = event.dataTransfer.files[0];
-  loadFile(file);
-};
 globalThis.addEventListener("paste", (event) => {
   const item = event.clipboardData.items[0];
   const file = item.getAsFile();
