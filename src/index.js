@@ -482,7 +482,6 @@ await getSampleSoundFontList();
 const audioContext = new AudioContext();
 if (audioContext.state === "running") await audioContext.suspend();
 const midy = new Midy(audioContext);
-midy.cacheMode = "ads";
 const midiPlayer = new MIDIPlayer(midy);
 await midy.loadSoundFont(`${midiPlayer.soundFontURL}/000.sf3`);
 midiPlayer.defaultLayout();
