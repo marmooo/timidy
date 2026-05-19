@@ -77,7 +77,7 @@ async function getSampleMIDIList() {
   shuffle(longFileList);
 
   let html = "";
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < Math.min(15, longFileList.length); i++) {
     const file = longFileList[i];
     const maintainer = !homepageMaintainer
       ? file.maintainer
