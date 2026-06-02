@@ -1,4 +1,4 @@
-import { Midy } from "https://cdn.jsdelivr.net/gh/marmooo/midy@0.5.2/dist/midy.min.js";
+import { Midy } from "https://cdn.jsdelivr.net/gh/marmooo/midy@0.5.3/dist/midy.min.js";
 import { MIDIPlayer } from "https://cdn.jsdelivr.net/npm/@marmooo/midi-player@0.0.6/+esm";
 
 function applyTheme(midiPlayer) {
@@ -119,8 +119,7 @@ async function getSampleSoundFontList() {
   root.innerHTML = html;
 }
 
-async function setProgramChange(channelNumber, programNumber, scheduleTime) {
-  const channel = midy.channels[channelNumber];
+async function setProgramChange(channel, programNumber) {
   const bankNumber = channel.isDrum ? 128 : channel.bankLSB;
   const index = midy.soundFontTable[programNumber][bankNumber];
   if (index === undefined) {
@@ -129,7 +128,7 @@ async function setProgramChange(channelNumber, programNumber, scheduleTime) {
     const path = `${midiPlayer.soundFontURL}/${baseName}.sf3`;
     await midy.loadSoundFont(path);
   }
-  midy.setProgramChange(channelNumber, programNumber, scheduleTime);
+  channel.setProgramChange(programNumber);
 }
 
 function clearAllKeys(pianos) {
@@ -142,26 +141,26 @@ function clearAllKeys(pianos) {
   }
 }
 
-async function noteOn(channelNumber, target, pressure, pressed) {
+async function noteOn(channel, target, pressure, pressed) {
   const noteNumber = Number(target.dataset.index);
   if (pressed[noteNumber]) return;
   pressed[noteNumber] = true;
   const velocity = Math.ceil(pressure * 127) || 64;
   setKeyColor(target, velocity);
   target.setAttribute("aria-pressed", "true");
-  await midy.noteOn(channelNumber, noteNumber, velocity);
+  await channel.noteOn(noteNumber, velocity);
 }
 
-function noteOff(channelNumber, target, pressure, pressed) {
+function noteOff(channel, target, pressure, pressed) {
   const noteNumber = Number(target.dataset.index);
   pressed[noteNumber] = false;
   const velocity = Math.ceil(pressure * 127) || 64;
   target.style.removeProperty("fill");
   target.setAttribute("aria-pressed", "false");
-  midy.noteOff(channelNumber, noteNumber, velocity);
+  channel.noteOff(noteNumber, velocity);
 }
 
-function handleMove(channelNumber, root, event, pressed) {
+function handleMove(channel, root, event, pressed) {
   const elements = root.elementsFromPoint(event.clientX, event.clientY);
   let key;
   for (let i = 0; i < elements.length; i++) {
@@ -173,17 +172,17 @@ function handleMove(channelNumber, root, event, pressed) {
   }
   if (key === currentKey) return;
   if (currentKey) {
-    noteOff(channelNumber, currentKey, event.pressure, pressed);
+    noteOff(channel, currentKey, event.pressure, pressed);
   }
   if (key) {
-    noteOn(channelNumber, key, event.pressure, pressed);
+    noteOn(channel, key, event.pressure, pressed);
   }
   currentKey = key;
 }
 
-function release(channelNumber, pressure, pressed) {
+function release(channel, pressure, pressed) {
   if (!currentKey) return;
-  noteOff(channelNumber, currentKey, pressure, pressed);
+  noteOff(channel, currentKey, pressure, pressed);
   currentKey = null;
 }
 
@@ -196,7 +195,7 @@ async function releaseAll() {
   }
 }
 
-function setPianoEvents(pianoComponent, channelNumber) {
+function setPianoEvents(pianoComponent, channel) {
   const pressed = new Array(128).fill(false);
   const root = pianoComponent.shadowRoot;
   pianoComponent.addEventListener("pointerdown", (event) => {
@@ -204,17 +203,17 @@ function setPianoEvents(pianoComponent, channelNumber) {
       midy.audioContext.resume();
     }
     pianoComponent.setPointerCapture(event.pointerId);
-    handleMove(channelNumber, root, event, pressed);
+    handleMove(channel, root, event, pressed);
   });
   pianoComponent.addEventListener("pointermove", (event) => {
     if (!event.buttons) return;
     if (midy.audioContext.state === "suspended") {
       midy.audioContext.resume();
     }
-    handleMove(channelNumber, root, event, pressed);
+    handleMove(channel, root, event, pressed);
   });
   pianoComponent.addEventListener("pointerup", (event) => {
-    release(channelNumber, event.pressure, pressed);
+    release(channel, event.pressure, pressed);
   });
   pianoComponent.addEventListener("pointerenter", (event) => {
     globalThis.getSelection()?.removeAllRanges();
@@ -222,14 +221,14 @@ function setPianoEvents(pianoComponent, channelNumber) {
     if (midy.audioContext.state === "suspended") {
       midy.audioContext.resume();
     }
-    handleMove(channelNumber, root, event, pressed);
+    handleMove(channel, root, event, pressed);
   });
   pianoComponent.addEventListener("pointercancel", async (event) => {
     release(channelNumber, event.pressure, pressed);
     await releaseAll();
   });
   pianoComponent.addEventListener("pointerleave", async (event) => {
-    release(channelNumber, event.pressure, pressed);
+    release(channel, event.pressure, pressed);
     await releaseAll();
   });
 }
@@ -288,45 +287,41 @@ function setEvents() {
   const nodes = document.querySelectorAll(selector);
   for (let i = 0; i < nodes.length; i += 6) {
     const channelNumber = Math.floor(i / 6);
+    const channel = midy.channels[channelNumber];
     const volume = nodes[i];
     volumes.push(volume);
     volume.addEventListener("change", (event) => {
-      const now = midy.audioContext.currentTime;
-      midy.setVolume(channelNumber, Number(event.target.value), now);
+      channel.setVolume(Number(event.target.value));
     });
     const expression = nodes[i + 1];
     expressions.push(expression);
     expression.addEventListener("change", (event) => {
-      const now = midy.audioContext.currentTime;
-      midy.setExpression(channelNumber, Number(event.target.value), now);
+      channel.setExpression(Number(event.target.value));
     });
     const pan = nodes[i + 2];
     pans.push(pan);
     pan.addEventListener("change", (event) => {
-      const now = midy.audioContext.currentTime;
-      midy.setPan(channelNumber, Number(event.target.value), now);
+      channel.setPan(Number(event.target.value));
     });
     const program = nodes[i + 3];
     programs.push(program);
     program.addEventListener("change", async (event) => {
       const input = event.target;
       input.classList.toggle("is-invalid", !input.checkValidity());
-      const now = midy.audioContext.currentTime;
       const programNumber = Number(input.value);
       const select = nodes[i + 4].shadowRoot.querySelector("select");
       select.selectedIndex = programNumber;
-      await setProgramChange(channelNumber, programNumber, now);
+      await setProgramChange(channel, programNumber);
     });
     const select = nodes[i + 4].shadowRoot.querySelector("select");
     select.addEventListener("change", async (event) => {
-      const now = midy.audioContext.currentTime;
       const programNumber = Number(event.target.selectedIndex);
       nodes[i + 3].value = programNumber;
-      await setProgramChange(channelNumber, programNumber, now);
+      await setProgramChange(channel, programNumber);
     });
     const piano = nodes[i + 5];
     pianos.push(piano.shadowRoot.querySelectorAll("rect"));
-    setPianoEvents(piano, channelNumber);
+    setPianoEvents(piano, channel);
   }
 }
 
