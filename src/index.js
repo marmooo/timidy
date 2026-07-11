@@ -28,8 +28,9 @@ function getGlobalCSS() {
   const sheet = new CSSStyleSheet();
   let css = "";
   for (const s of document.styleSheets) {
-    try { for (const r of s.cssRules) css += r.cssText; }
-    catch { /* skip cross-origin sheets */ }
+    try {
+      for (const r of s.cssRules) css += r.cssText;
+    } catch { /* skip cross-origin sheets */ }
   }
   sheet.replaceSync(css);
   return sheet;
