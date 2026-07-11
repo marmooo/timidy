@@ -1,6 +1,4 @@
-// import { Midy } from "https://cdn.jsdelivr.net/gh/marmooo/midy@0.5.7/dist/midy.min.js";
-// import { Midy } from "../midy/dist/midy.js";
-import { MidyGMLite as Midy } from "../midy/dist/midy-GMLite.js";
+import { Midy } from "https://cdn.jsdelivr.net/gh/marmooo/midy@0.5.7/dist/midy.min.js";
 import { MIDIPlayer } from "https://cdn.jsdelivr.net/npm/@marmooo/midi-player@0.0.7/+esm";
 
 function toggleDarkMode() {
