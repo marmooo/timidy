@@ -57,6 +57,59 @@
         font-weight: 600;
         pointer-events: none;
       }
+
+      .toolbar {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .table-columns {
+        position: relative;
+      }
+      .table-columns summary {
+        cursor: pointer;
+        user-select: none;
+        list-style: none;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid var(--bs-border-color);
+        border-radius: var(--bs-border-radius);
+        background: var(--bs-body-bg);
+      }
+      .table-columns summary::-webkit-details-marker {
+        display: none;
+      }
+      .table-columns summary::after {
+        content: " ▼";
+        font-size: 0.75em;
+      }
+      .table-columns[open]
+        summary::after {
+        content: " ▲";
+      }
+      .table-columns ul {
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        min-width: 180px;
+        margin: 0;
+        padding: 8px;
+        list-style: none;
+        border: 1px solid var(--bs-border-color);
+        border-radius: var(--bs-border-radius);
+        background: var(--bs-body-bg);
+        box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+        z-index: 1000;
+      }
+      .table-columns li + li {
+        margin-top: 6px;
+      }
+      .table-columns-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+
       html[data-bs-theme="dark"] .favicon { filter: invert(1) hue-rotate(180deg); }
     </style>
     <script data-ad-client="ca-pub-6459713332128733" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
@@ -265,7 +318,7 @@
           <div class="modal-body">
             <div id="libraryCollections" class="d-flex flex-wrap gap-1 mb-2 d-none"></div>
             <div id="libraryInstruments" class="d-flex flex-wrap gap-1 mb-2 d-none"></div>
-            <div id="libraryColumns" class="small"></div>
+            <div id="libraryColumns" class="toolbar"></div>
             <div class="table-responsive text-nowrap">
               <table id="libraryTable" class="table table-sm table-striped w-100"></table>
             </div>
