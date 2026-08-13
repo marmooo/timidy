@@ -55,11 +55,6 @@
         pointer-events: none;
       }
 
-      .toolbar {
-        display: flex;
-        justify-content: flex-end;
-      }
-
       .table-columns {
         position: relative;
       }
@@ -315,7 +310,10 @@
           <div class="modal-body">
             <div id="libraryCollections" class="d-flex flex-wrap gap-1 mb-2 d-none"></div>
             <div id="libraryInstruments" class="d-flex flex-wrap gap-1 mb-2 d-none"></div>
-            <div id="libraryColumns" class="toolbar"></div>
+            <div class="toolbar d-flex justify-content-end align-items-center gap-2">
+              <div>Powered by <a href="https://marmooo.github.io/free-midi/">Free MIDI</a></div>
+              <div id="libraryColumns"></div>
+            </div>
             <div class="table-responsive text-nowrap">
               <table id="libraryTable" class="table table-striped table-hover table-bordered table-sm align-middle w-100"></table>
             </div>
