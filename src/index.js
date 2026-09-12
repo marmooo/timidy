@@ -1,4 +1,5 @@
-import { Midy } from "https://cdn.jsdelivr.net/gh/marmooo/midy@0.6.6/dist/midy.min.js";
+// import { Midy } from "https://cdn.jsdelivr.net/gh/marmooo/midy@0.6.6/dist/midy.min.js";
+import { Midy } from "../midy/dist/midy.js";
 import { MIDIPlayer } from "https://cdn.jsdelivr.net/npm/@marmooo/midi-player@0.0.9/+esm";
 import { Modal } from "https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/+esm";
 import { MidiLibrary } from "https://marmooo.github.io/free-midi/midi-library.js";
@@ -448,6 +449,9 @@ document.getElementById("openSoundFontLibrary").addEventListener(
 const audioContext = new AudioContext();
 if (audioContext.state === "running") await audioContext.suspend();
 const midy = new Midy(audioContext);
+midy.cacheMode = "chunk";
+// midy.debugChunkPerformance = true;
+// midy.clearChunkPerformanceLog();
 const midiPlayer = new MIDIPlayer(midy);
 await midy.loadSoundFont(`${midiPlayer.soundFontURL}/000/000.sf3`);
 midiPlayer.defaultLayout();
@@ -465,6 +469,21 @@ const programs = [];
 let scheduleIndex = 0;
 let currentKey;
 
+midy.addEventListener("ended", () => {
+  // console.table(
+  //   midy.chunkPerformanceLog
+  //     .filter((x) => x.lateByMs > 0 || x.complexNoteCount > 0)
+  //     .map((x) => ({
+  //       at: x.chunkStart,
+  //       notes: x.noteCount,
+  //       simple: x.simpleNoteCount,
+  //       complex: x.complexNoteCount,
+  //       waitMs: x.queueWaitMs?.toFixed(1),
+  //       renderMs: x.renderMs?.toFixed(1),
+  //       lateMs: x.lateByMs?.toFixed(1),
+  //     })),
+  // );
+});
 midy.addEventListener("looped", () => {
   clearAllKeys(pianos);
   scheduleIndex = 0;
