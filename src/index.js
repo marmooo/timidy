@@ -449,7 +449,7 @@ const audioContext = new AudioContext();
 if (audioContext.state === "running") await audioContext.suspend();
 const midy = new Midy(audioContext);
 const midiPlayer = new MIDIPlayer(midy);
-await midy.loadSoundFont(`${midiPlayer.soundFontURL}/000.sf3`);
+await midy.loadSoundFont(`${midiPlayer.soundFontURL}/000/000.sf3`);
 midiPlayer.defaultLayout();
 midiPlayer.applyTheme(globalCSS, {
   "midi-player-btn": "btn bg-light-subtle p-1",
