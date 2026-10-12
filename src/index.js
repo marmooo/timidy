@@ -488,11 +488,6 @@ document.getElementById("openSoundFontLibrary").addEventListener(
 const audioContext = new AudioContext();
 if (audioContext.state === "running") await audioContext.suspend();
 const midy = new Midy(audioContext);
-midy.cacheMode = "chunk";
-midy.prerollSec = 6;
-midy.maxAdsNonLoopBufferSec = 3; // 聴感で調整
-midy.maxLiveReleaseSec = 3;
-midy.debug = true;
 const midiPlayer = new MIDIPlayer(midy);
 await midy.loadSoundFont(`${midiPlayer.soundFontURL}/000/000.sf3`);
 midiPlayer.defaultLayout();
