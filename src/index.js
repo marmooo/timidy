@@ -531,6 +531,7 @@ const midiLibrary = new MidiLibrary({
   collections: "libraryCollections",
   instruments: "libraryInstruments",
   lang: htmlLang,
+  excludeNonRedistributable: true,
   onSelect: async (row) => {
     const buf = await (await fetch(`${midiLibrary.midiDB}/${row.file}`))
       .arrayBuffer();
